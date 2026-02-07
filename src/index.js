@@ -126,6 +126,33 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Endpoint de debug para verificar configuración SMTP
+app.get('/api/debug', async (req, res) => {
+  const config = {
+    SMTP_HOST: process.env.SMTP_HOST || 'NO DEFINIDO',
+    SMTP_PORT: process.env.SMTP_PORT || 'NO DEFINIDO',
+    SMTP_SECURE: process.env.SMTP_SECURE || 'NO DEFINIDO',
+    SMTP_USER: process.env.SMTP_USER ? `${process.env.SMTP_USER.substring(0, 5)}...` : 'NO DEFINIDO',
+    SMTP_PASS: process.env.SMTP_PASS ? '****' : 'NO DEFINIDO',
+  };
+
+  // Intentar verificar conexión SMTP
+  let smtpStatus = 'No verificado';
+  try {
+    await transporter.verify();
+    smtpStatus = 'Conexión exitosa';
+  } catch (error) {
+    smtpStatus = `Error: ${error.message}`;
+  }
+
+  res.status(200).json({
+    success: true,
+    config,
+    smtpStatus,
+    nodeEnv: process.env.NODE_ENV || 'development',
+  });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
